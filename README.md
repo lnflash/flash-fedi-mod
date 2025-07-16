@@ -1,70 +1,193 @@
-# Getting Started with Create React App
+# Flash Fedi Mod
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, responsive web application that brings the Flash mobile app experience to the web, specifically designed for Fedimint eCash payments with Lightning Network integration.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+- **Flash Design System**: Authentic look and feel matching the Flash mobile app
+- **Fedimint Integration**: Native support for Fedimint eCash payments
+- **Lightning Network**: Full Lightning address and invoice support
+- **WebLN Integration**: Seamless browser wallet integration
+- **Responsive Design**: Optimized for mobile and desktop
+- **Real-time Balance**: Live balance updates and transaction history
+- **QR Code Generation**: Easy invoice sharing with QR codes
 
-### `npm start`
+## 🎨 Design
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+This app replicates the exact design system from the Flash mobile app:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Colors**: Primary green (#007856), proper grey scale, and semantic colors
+- **Typography**: Sora font family with proper sizing hierarchy
+- **Components**: Card-based layout with rounded corners and subtle shadows
+- **Interactions**: Smooth transitions and hover effects
+- **Layout**: Mobile-first responsive design
 
-### `npm test`
+## 🛠️ Technology Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **React 18**: Modern React with hooks
+- **TailwindCSS 3**: Utility-first CSS framework
+- **Fedi UI Library**: Official Fedimint UI components
+- **WebLN**: Lightning Network browser integration
+- **Fedimint**: eCash and Lightning payment processing
 
-### `npm run build`
+## 📦 Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd flash-fedi
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Install dependencies:
+```bash
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Start the development server:
+```bash
+npm start
+```
 
-### `npm run eject`
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🔧 Configuration
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### WebLN Setup
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+The app requires WebLN to be enabled in your browser. Install a WebLN-compatible wallet extension:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- **Alby**: [https://getalby.com](https://getalby.com)
+- **Zap**: [https://zap.jackmallers.com](https://zap.jackmallers.com)
+- **Phoenix**: [https://phoenix.acinq.co](https://phoenix.acinq.co)
 
-## Learn More
+### Fedimint Federation
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Connect to a Fedimint federation by configuring your WebLN provider with the appropriate federation endpoints.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🎯 Usage
 
-### Code Splitting
+### Sending Payments
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. Navigate to the "Send" tab
+2. Enter the recipient's Lightning address or Fedimint username
+3. Specify the amount in satoshis
+4. Add an optional memo
+5. Click "Send Payment"
 
-### Analyzing the Bundle Size
+### Receiving Payments
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. Navigate to the "Receive" tab
+2. Enter the amount you want to receive
+3. Add an optional memo
+4. Generate an invoice
+5. Share the QR code or invoice with the sender
 
-### Making a Progressive Web App
+### Transaction History
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+View all your recent transactions in the "History" tab, including:
+- Payment direction (send/receive)
+- Amount and currency
+- Recipient/sender information
+- Timestamp and status
+- Memo notes
 
-### Advanced Configuration
+## 🎨 Customization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Colors
 
-### Deployment
+The app uses Flash's exact color palette defined in `tailwind.config.js`:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```javascript
+colors: {
+  primary: '#007856',
+  grey: {
+    0: '#3A3C51',
+    1: '#61637A',
+    // ... more colors
+  }
+}
+```
 
-### `npm run build` fails to minify
+### Typography
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Uses the Sora font family with proper sizing:
+
+```css
+.flash-text-h1 { /* 24px, semibold */ }
+.flash-text-h2 { /* 20px, semibold */ }
+.flash-text-p1 { /* 18px, regular */ }
+.flash-text-p2 { /* 16px, regular */ }
+```
+
+### Components
+
+Custom Flash-style components are available:
+
+```css
+.flash-card { /* Card with proper styling */ }
+.flash-button { /* Primary button */ }
+.flash-button-secondary { /* Secondary button */ }
+```
+
+## 🔒 Security
+
+- **Client-side**: All sensitive operations happen in the browser
+- **WebLN**: Secure Lightning Network integration
+- **Fedimint**: Privacy-preserving eCash transactions
+- **No server storage**: No personal data stored on servers
+
+## 📱 Mobile Optimization
+
+The app is fully responsive and optimized for mobile devices:
+
+- Touch-friendly interface
+- Proper viewport scaling
+- Mobile-optimized button sizes
+- Responsive typography
+
+## 🚀 Deployment
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+### Deploy to Static Hosting
+
+The app can be deployed to any static hosting service:
+
+- **Vercel**: `vercel --prod`
+- **Netlify**: `netlify deploy --prod`
+- **GitHub Pages**: Configure in repository settings
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- **Flash Team**: For the original mobile app design and inspiration
+- **Fedimint Community**: For the eCash technology
+- **Lightning Network**: For the payment infrastructure
+- **WebLN**: For browser Lightning integration
+
+## 📞 Support
+
+For support and questions:
+
+- **Issues**: Create an issue on GitHub
+- **Discussions**: Use GitHub Discussions
+- **Documentation**: Check the Fedimint docs
+
+---
+
+**Flash Fedi Mod** - Bringing the Flash experience to the web with Fedimint eCash! ⚡

@@ -1,13 +1,64 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "@fedibtc/ui/dist/index.css";
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: "Sora", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f1f1f1;
+  }
+
+  code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer components {
+  .flash-card {
+    @apply bg-layer rounded-xl p-4 shadow-sm border border-border01;
+  }
+
+  .flash-button {
+    @apply bg-button01 text-buttonInverse font-sora font-semibold px-8 py-2 rounded-2xl transition-colors;
+  }
+
+  .flash-button-secondary {
+    @apply bg-button02 text-text01 font-sora font-semibold px-8 py-2 rounded-2xl transition-colors;
+  }
+
+  .flash-text-h1 {
+    @apply font-sora text-2xl font-semibold text-text01;
+  }
+
+  .flash-text-h2 {
+    @apply font-sora text-xl font-semibold text-text01;
+  }
+
+  .flash-text-p1 {
+    @apply font-sora text-lg text-text01;
+  }
+
+  .flash-text-p2 {
+    @apply font-sora text-base text-text01;
+  }
+
+  .flash-text-p3 {
+    @apply font-sora text-sm text-text01;
+  }
+
+  .flash-text-p4 {
+    @apply font-sora text-xs text-text01;
+  }
+
+  .flash-text-caption {
+    @apply font-sora text-sm text-text02;
+  }
 }
