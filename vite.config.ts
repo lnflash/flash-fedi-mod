@@ -7,5 +7,8 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   build: { outDir: "dist", sourcemap: true },
-  server: { port: 3000 },
+  server: { port: 3000, host: true },
+  // host:true exposes on the LAN; allowedHosts:true lets a tunnel (cloudflared/ngrok)
+  // hostname reach `npm run preview` without a "Blocked request" error.
+  preview: { port: 4173, host: true, allowedHosts: true },
 });
