@@ -1,193 +1,89 @@
-# Flash Fedi Mod
+# Flash · FediMod
 
-A modern, responsive web application that brings the Flash mobile app experience to the web, specifically designed for Fedimint eCash payments with Lightning Network integration.
+A [FediMod](https://fedi.org) that connects your **Flash** account from inside the Fedi app
+and **bridges your Fedi ecash to Flash over Lightning**.
 
-## 🚀 Features
+This is a ground-up rearchitecture of the original `flash-fedi-mod`. See
+[`PHASE0-FLASH-CONTRACT.md`](PHASE0-FLASH-CONTRACT.md) for the verified Flash API contract
+this is built against, and [`REVIEW-AND-DESIGN.md`](REVIEW-AND-DESIGN.md) for why.
 
-- **Flash Design System**: Authentic look and feel matching the Flash mobile app
-- **Fedimint Integration**: Native support for Fedimint eCash payments
-- **Lightning Network**: Full Lightning address and invoice support
-- **WebLN Integration**: Seamless browser wallet integration
-- **Responsive Design**: Optimized for mobile and desktop
-- **Real-time Balance**: Live balance updates and transaction history
-- **QR Code Generation**: Easy invoice sharing with QR codes
+## What it does
 
-## 🎨 Design
+| Tab | Flow | Flash operations |
+|-----|------|------------------|
+| **Move** | Top up Flash from your Fedi balance, or withdraw Flash → Fedi, over Lightning | `lnUsdInvoiceCreate` + host `sendPayment`; host `makeInvoice` + `lnInvoicePaymentSend` |
+| **Send** | Send USD to any Flash user by username | `accountDefaultWallet` → `intraLedgerUsdPaymentSend` |
+| **Receive** | Create a Lightning invoice to your Flash USD wallet (real QR) | `lnUsdInvoiceCreate` + `lnInvoicePaymentStatus` |
+| **Cash out** | Withdraw your USD balance to a registered bank account | `requestCashout` (quote) → `initiateCashout` (execute) |
 
-This app replicates the exact design system from the Flash mobile app:
+## Architecture (the short version)
 
-- **Colors**: Primary green (#007856), proper grey scale, and semantic colors
-- **Typography**: Sora font family with proper sizing hierarchy
-- **Components**: Card-based layout with rounded corners and subtle shadows
-- **Interactions**: Smooth transitions and hover effects
-- **Layout**: Mobile-first responsive design
+- **Pure client-side.** No backend, no app secrets. The only credential held is the
+  **user's own auth token**, obtained at runtime via Flash's OTP login (real geetest captcha).
+  Token lives in `sessionStorage` (tab-scoped), never `localStorage`, never the bundle.
+- **Talks directly to Flash's real GraphQL API** — every operation is verified against the
+  live schema (`schema/flash-schema.graphql`). No invented REST endpoints.
+- **The Fedi host provides the Lightning rails** via its injected WebLN provider
+  (`src/host/webln.ts`). If there's no provider, the app says so — it never fakes a balance.
+- **Units are explicit** (sats vs USD cents) and fiat conversion uses Flash's
+  `realtimePrice` — no hardcoded BTC price.
 
-## 🛠️ Technology Stack
-
-- **React 18**: Modern React with hooks
-- **TailwindCSS 3**: Utility-first CSS framework
-- **Fedi UI Library**: Official Fedimint UI components
-- **WebLN**: Lightning Network browser integration
-- **Fedimint**: eCash and Lightning payment processing
-
-## 📦 Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd flash-fedi
+```
+src/
+  flash/      typed client + operations generated-by-hand from the real schema
+  host/       Fedi/WebLN provider abstraction
+  auth/       geetest captcha + OTP
+  money/      sats/cents/fiat conversions (unit-tested)
+  state/      FlashContext (session + actions)
+  features/   AuthScreen, WalletHeader, Bridge/Send/Receive/Cashout tabs
 ```
 
-2. Install dependencies:
+## Why there's no card/bank "top up"
+
+The Flash GraphQL API exposes **no** card/bank/Fygaro cash-in mutation (only cash-**out**).
+The original app called endpoints that don't exist. Here, the **Fedi → Flash Lightning
+bridge is the top-up**. See the Phase 0 doc, and [`ROADMAP.md`](ROADMAP.md) for the planned
+Bank/Credit-Card top-up rollout once Flash exposes a cash-in mutation.
+
+## Feature flags
+
+Every major feature is gated by a flag (all default **on**) so a deploy can ship with any
+flow disabled without code changes. Set them in `.env` (see `.env.example`) — values accept
+`true/false`, `on/off`, `1/0`, `yes/no`:
+
+| Flag | Gates |
+|------|-------|
+| `VITE_FEATURE_BRIDGE` | Move tab |
+| `VITE_FEATURE_BRIDGE_WITHDRAW` | Flash → Fedi withdraw direction (sub-flag of Move) |
+| `VITE_FEATURE_SEND` | Send tab |
+| `VITE_FEATURE_RECEIVE` | Receive tab |
+| `VITE_FEATURE_CASHOUT` | Cash out tab |
+| `VITE_FEATURE_OTP_WHATSAPP` | WhatsApp OTP delivery (sub-flag of login) |
+
+Flags are resolved once at startup in [`src/flags.ts`](src/flags.ts).
+
+## Develop
+
 ```bash
 npm install
+npm run smoke      # hits the LIVE Flash API with unauthenticated queries — proves the client works
+npm test           # unit + component tests (every feature + each flag's disabled state)
+npm run dev        # http://localhost:3000
+npm run build      # typecheck + production build to dist/
 ```
 
-3. Start the development server:
-```bash
-npm start
-```
+`cp .env.example .env` to override the API URL or geetest product. `.env` holds **no secrets**.
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+## Before production (must verify on a device)
 
-## 🔧 Configuration
+1. **Geetest captcha** (`src/auth/captcha.ts`): the field mapping follows the Galoy/Blink
+   convention; confirm against the live widget. Add `https://static.geetest.com` to the CSP
+   in `index.html` (`script-src`/`connect-src`).
+2. **Fedi host injection** (`src/host/webln.ts`): confirm the exact provider surface and
+   lifecycle Fedi injects against current Fedi Mods docs.
+3. **TOTP**: accounts with 2FA need the `userLoginUpgrade` flow wired into `AuthScreen`.
+4. **Publishing**: register the mod's HTTPS URL in the Fedi mods registry (format per Fedi docs).
 
-### WebLN Setup
+## License
 
-The app requires WebLN to be enabled in your browser. Install a WebLN-compatible wallet extension:
-
-- **Alby**: [https://getalby.com](https://getalby.com)
-- **Zap**: [https://zap.jackmallers.com](https://zap.jackmallers.com)
-- **Phoenix**: [https://phoenix.acinq.co](https://phoenix.acinq.co)
-
-### Fedimint Federation
-
-Connect to a Fedimint federation by configuring your WebLN provider with the appropriate federation endpoints.
-
-## 🎯 Usage
-
-### Sending Payments
-
-1. Navigate to the "Send" tab
-2. Enter the recipient's Lightning address or Fedimint username
-3. Specify the amount in satoshis
-4. Add an optional memo
-5. Click "Send Payment"
-
-### Receiving Payments
-
-1. Navigate to the "Receive" tab
-2. Enter the amount you want to receive
-3. Add an optional memo
-4. Generate an invoice
-5. Share the QR code or invoice with the sender
-
-### Transaction History
-
-View all your recent transactions in the "History" tab, including:
-- Payment direction (send/receive)
-- Amount and currency
-- Recipient/sender information
-- Timestamp and status
-- Memo notes
-
-## 🎨 Customization
-
-### Colors
-
-The app uses Flash's exact color palette defined in `tailwind.config.js`:
-
-```javascript
-colors: {
-  primary: '#007856',
-  grey: {
-    0: '#3A3C51',
-    1: '#61637A',
-    // ... more colors
-  }
-}
-```
-
-### Typography
-
-Uses the Sora font family with proper sizing:
-
-```css
-.flash-text-h1 { /* 24px, semibold */ }
-.flash-text-h2 { /* 20px, semibold */ }
-.flash-text-p1 { /* 18px, regular */ }
-.flash-text-p2 { /* 16px, regular */ }
-```
-
-### Components
-
-Custom Flash-style components are available:
-
-```css
-.flash-card { /* Card with proper styling */ }
-.flash-button { /* Primary button */ }
-.flash-button-secondary { /* Secondary button */ }
-```
-
-## 🔒 Security
-
-- **Client-side**: All sensitive operations happen in the browser
-- **WebLN**: Secure Lightning Network integration
-- **Fedimint**: Privacy-preserving eCash transactions
-- **No server storage**: No personal data stored on servers
-
-## 📱 Mobile Optimization
-
-The app is fully responsive and optimized for mobile devices:
-
-- Touch-friendly interface
-- Proper viewport scaling
-- Mobile-optimized button sizes
-- Responsive typography
-
-## 🚀 Deployment
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-### Deploy to Static Hosting
-
-The app can be deployed to any static hosting service:
-
-- **Vercel**: `vercel --prod`
-- **Netlify**: `netlify deploy --prod`
-- **GitHub Pages**: Configure in repository settings
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- **Flash Team**: For the original mobile app design and inspiration
-- **Fedimint Community**: For the eCash technology
-- **Lightning Network**: For the payment infrastructure
-- **WebLN**: For browser Lightning integration
-
-## 📞 Support
-
-For support and questions:
-
-- **Issues**: Create an issue on GitHub
-- **Discussions**: Use GitHub Discussions
-- **Documentation**: Check the Fedimint docs
-
----
-
-**Flash Fedi Mod** - Bringing the Flash experience to the web with Fedimint eCash! ⚡
+MIT
