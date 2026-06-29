@@ -6,18 +6,22 @@ import BridgeTab from "./features/BridgeTab";
 import SendTab from "./features/SendTab";
 import ReceiveTab from "./features/ReceiveTab";
 import CashoutTab from "./features/CashoutTab";
-import { Spinner } from "./components/ui";
+import { Banner, Spinner } from "./components/ui";
+import { flags, type MajorFeature } from "./flags";
 
-const TABS = [
+const ALL_TABS = [
   { id: "bridge", label: "Move", icon: "🔀", el: <BridgeTab /> },
   { id: "send", label: "Send", icon: "⚡", el: <SendTab /> },
   { id: "receive", label: "Receive", icon: "📥", el: <ReceiveTab /> },
   { id: "cashout", label: "Cash out", icon: "🏦", el: <CashoutTab /> },
 ] as const;
 
+/** Only the tabs whose major-feature flag is enabled, in display order. */
+const TABS = ALL_TABS.filter((t) => flags[t.id as MajorFeature]);
+
 function Shell() {
   const { status } = useFlash();
-  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("bridge");
+  const [tab, setTab] = useState<string>(TABS[0]?.id ?? "");
 
   if (status === "loading") {
     return (
@@ -28,6 +32,17 @@ function Shell() {
   }
   if (status === "anonymous") return <AuthScreen />;
 
+  if (TABS.length === 0) {
+    return (
+      <div className="min-h-screen pb-24">
+        <WalletHeader />
+        <main className="mx-auto max-w-md px-4 py-5">
+          <Banner kind="info">No features are currently enabled.</Banner>
+        </main>
+      </div>
+    );
+  }
+
   const active = TABS.find((t) => t.id === tab) ?? TABS[0];
 
   return (
@@ -36,7 +51,10 @@ function Shell() {
       <main className="mx-auto max-w-md px-4 py-5">{active.el}</main>
 
       <nav className="fixed bottom-0 inset-x-0 bg-layer border-t border-border">
-        <div className="mx-auto max-w-md grid grid-cols-4">
+        <div
+          className="mx-auto max-w-md grid"
+          style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}
+        >
           {TABS.map((t) => (
             <button
               key={t.id}

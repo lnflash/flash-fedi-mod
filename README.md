@@ -42,14 +42,32 @@ src/
 
 The Flash GraphQL API exposes **no** card/bank/Fygaro cash-in mutation (only cash-**out**).
 The original app called endpoints that don't exist. Here, the **Fedi → Flash Lightning
-bridge is the top-up**. See Phase 0 doc.
+bridge is the top-up**. See the Phase 0 doc, and [`ROADMAP.md`](ROADMAP.md) for the planned
+Bank/Credit-Card top-up rollout once Flash exposes a cash-in mutation.
+
+## Feature flags
+
+Every major feature is gated by a flag (all default **on**) so a deploy can ship with any
+flow disabled without code changes. Set them in `.env` (see `.env.example`) — values accept
+`true/false`, `on/off`, `1/0`, `yes/no`:
+
+| Flag | Gates |
+|------|-------|
+| `VITE_FEATURE_BRIDGE` | Move tab |
+| `VITE_FEATURE_BRIDGE_WITHDRAW` | Flash → Fedi withdraw direction (sub-flag of Move) |
+| `VITE_FEATURE_SEND` | Send tab |
+| `VITE_FEATURE_RECEIVE` | Receive tab |
+| `VITE_FEATURE_CASHOUT` | Cash out tab |
+| `VITE_FEATURE_OTP_WHATSAPP` | WhatsApp OTP delivery (sub-flag of login) |
+
+Flags are resolved once at startup in [`src/flags.ts`](src/flags.ts).
 
 ## Develop
 
 ```bash
 npm install
 npm run smoke      # hits the LIVE Flash API with unauthenticated queries — proves the client works
-npm test           # unit tests (money conversions)
+npm test           # unit + component tests (every feature + each flag's disabled state)
 npm run dev        # http://localhost:3000
 npm run build      # typecheck + production build to dist/
 ```

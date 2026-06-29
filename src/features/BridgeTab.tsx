@@ -4,6 +4,7 @@ import { Banner, Button, Card, Field, TextInput } from "../components/ui";
 import { dollarsToCents, formatUsd, minorUnitToSats } from "../money/units";
 import { hasHostProvider, makeHostInvoice, payWithHost } from "../host/webln";
 import { createUsdInvoice, getInvoiceStatus, payInvoiceFromUsd } from "../flash/operations";
+import { flags } from "../flags";
 
 type Direction = "in" | "out";
 type Phase = "idle" | "working" | "done" | "error";
@@ -28,14 +29,22 @@ export default function BridgeTab() {
         // Top up Flash from Fedi: Flash issues an invoice, Fedi pays it.
         const invoice = await createUsdInvoice(usdWallet.id, cents, "Top up from Fedi");
         await payWithHost(invoice.paymentRequest);
-        // Confirm with Flash that the invoice settled.
+        // Confirm with Flash that the invoice actually settled before claiming success.
+        let settled = false;
         for (let i = 0; i < 10; i++) {
           const status = await getInvoiceStatus(invoice.paymentRequest);
-          if (status === "PAID") break;
+          if (status === "PAID") {
+            settled = true;
+            break;
+          }
           if (status === "EXPIRED") throw new Error("Invoice expired before payment settled.");
           await new Promise((r) => setTimeout(r, 1500));
         }
-        setMessage(`Topped up ${formatUsd(cents)} from your Fedi balance.`);
+        setMessage(
+          settled
+            ? `Topped up ${formatUsd(cents)} from your Fedi balance.`
+            : `Payment sent — Flash is still confirming it. Your balance will update once it settles.`,
+        );
       } else {
         // Withdraw Flash → Fedi: Fedi issues an invoice, Flash pays it.
         const sats = minorUnitToSats(cents, price);
@@ -68,10 +77,12 @@ export default function BridgeTab() {
       )}
 
       <Card className="space-y-4">
-        <div className="grid grid-cols-2 gap-2">
-          <DirButton active={dir === "in"} onClick={() => setDir("in")} title="Top up Flash" subtitle="Fedi → Flash" />
-          <DirButton active={dir === "out"} onClick={() => setDir("out")} title="Withdraw" subtitle="Flash → Fedi" />
-        </div>
+        {flags.bridgeWithdraw && (
+          <div className="grid grid-cols-2 gap-2">
+            <DirButton active={dir === "in"} onClick={() => setDir("in")} title="Top up Flash" subtitle="Fedi → Flash" />
+            <DirButton active={dir === "out"} onClick={() => setDir("out")} title="Withdraw" subtitle="Flash → Fedi" />
+          </div>
+        )}
 
         <Field label="Amount (USD)" hint={cents != null && price ? `≈ ${minorUnitToSats(cents, price).toLocaleString()} sats` : undefined}>
           <TextInput

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useFlash } from "../state/FlashContext";
 import { Banner, Button, Card, Field, TextInput } from "../components/ui";
+import { flags } from "../flags";
 import type { PhoneCodeChannel } from "../flash/types";
 
 const COUNTRIES = [
@@ -22,6 +23,7 @@ export default function AuthScreen() {
   const [totp, setTotp] = useState(false);
 
   const phone = `${dial}${local.replace(/[^\d]/g, "")}`;
+  const channels: PhoneCodeChannel[] = flags.otpWhatsApp ? ["SMS", "WHATSAPP"] : ["SMS"];
 
   async function onRequest() {
     setError(null);
@@ -93,7 +95,7 @@ export default function AuthScreen() {
             </Field>
             <Field label="Delivery">
               <div className="flex gap-2">
-                {(["SMS", "WHATSAPP"] as PhoneCodeChannel[]).map((ch) => (
+                {channels.map((ch) => (
                   <button
                     key={ch}
                     onClick={() => setChannel(ch)}
