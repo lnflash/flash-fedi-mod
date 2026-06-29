@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Lock down what the mod can load. Tighten connect-src to your Flash API host.
+         *.geetest.com / static.geetest.com are required by Flash's login captcha.
+         If the captcha widget throws a CSP eval error on a device, add 'unsafe-eval'
+         to script-src (some geetest builds need it). -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; connect-src 'self' https://api.flashapp.me https://*.flashapp.me https://*.geetest.com; img-src 'self' data: https://*.geetest.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' https://static.geetest.com https://*.geetest.com"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>Flash · FediMod</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
