@@ -14,6 +14,9 @@ export default defineConfig({
   // on a random tunnel origin is blocked. Routing /graphql through the server makes the
   // request same-origin (no CORS); the server-to-server hop isn't subject to CORS. Set
   // VITE_FLASH_API_URL=/graphql (see .env) so the app targets this proxy.
+  //
+  // Defaults to the TEST API: the API-key feature (FIP-07) is live on TEST first, and
+  // the mod mints its key there. Override the upstream with VITE_FLASH_PROXY_TARGET.
   // For PRODUCTION the mod talks to Flash directly — its deployed origin must be added to
   // Flash's CORS allowlist (e.g. host under *.flashapp.me). This proxy does not ship in
   // the static build.
@@ -22,13 +25,14 @@ export default defineConfig({
 });
 
 function flashProxy() {
+  // Server-to-server, so no Origin header is needed (the TEST ingress accepts it —
+  // proven by the flash-apikey-console Worker, which forwards nothing but the token).
+  const target = process.env.VITE_FLASH_PROXY_TARGET ?? "https://api.test.flashapp.me";
   return {
     "/graphql": {
-      target: "https://api.flashapp.me",
+      target,
       changeOrigin: true,
       secure: true,
-      // Present an allowlisted Origin to satisfy any server-side origin check.
-      headers: { Origin: "https://pay.flashapp.me" },
     },
   };
 }

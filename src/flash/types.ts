@@ -73,6 +73,41 @@ export interface AuthTokenPayload {
   errors: GqlError[];
 }
 
+// --- API keys (FIP-07) -------------------------------------------------------
+/** Scope enum values, as the Flash API expects them (lowercase-underscore). */
+export type ApiKeyScope =
+  | "read_user"
+  | "read_wallet"
+  | "read_transactions"
+  | "write_user"
+  | "write_wallet"
+  | "write_transactions"
+  | "admin";
+
+/** The raw secret returned once by apiKeyCreate. Treat it like a password. */
+export type ApiKeySecret = string & { readonly __brand: "ApiKeySecret" };
+
+export interface ApiKey {
+  /** Global id — the handle needed to revoke the key. */
+  id: string;
+  /** Public identifier (`fk_…`), safe to log. */
+  keyId: string;
+  name: string;
+  /** Only returned on create — the raw key, shown exactly once. */
+  apiKey?: ApiKeySecret | null;
+  scopes: ApiKeyScope[];
+}
+
+export interface ApiKeyCreatePayload {
+  apiKey: ApiKey | null;
+  errors: GqlError[];
+}
+
+export interface ApiKeyRevokePayload {
+  apiKey: { keyId: string; status: string } | null;
+  errors: GqlError[];
+}
+
 export interface CaptchaChallenge {
   id: string;
   challengeCode: string;

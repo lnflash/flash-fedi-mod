@@ -3,8 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   FlashGraphQLError,
   FlashNetworkError,
+  getApiKey,
   getToken,
   gqlRequest,
+  setApiKey,
   setToken,
 } from "./client";
 import type { AuthToken } from "./types";
@@ -25,10 +27,12 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
   setToken(null);
+  setApiKey(null);
 });
 afterEach(() => {
   vi.unstubAllGlobals();
   setToken(null);
+  setApiKey(null);
 });
 
 describe("gqlRequest", () => {
@@ -46,6 +50,38 @@ describe("gqlRequest", () => {
 
     await gqlRequest("q", {}, { anonymous: true });
     expect(fetchMock.mock.calls[1][1].headers.Authorization).toBeUndefined();
+  });
+
+  it("sends X-API-KEY (not Authorization) when an API key is set, and skips it when anonymous", async () => {
+    setApiKey("fk_live_abc", "key-id");
+    fetchMock.mockResolvedValue(ok({ x: 1 }));
+
+    await gqlRequest("q");
+    expect(fetchMock.mock.calls[0][1].headers["X-API-KEY"]).toBe("fk_live_abc");
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBeUndefined();
+
+    await gqlRequest("q", {}, { anonymous: true });
+    expect(fetchMock.mock.calls[1][1].headers["X-API-KEY"]).toBeUndefined();
+  });
+
+  it("prefers the API key over the session token when both are present", async () => {
+    setToken("tok-123" as AuthToken);
+    setApiKey("fk_live_abc", "key-id");
+    fetchMock.mockResolvedValue(ok({ x: 1 }));
+
+    await gqlRequest("q");
+    expect(fetchMock.mock.calls[0][1].headers["X-API-KEY"]).toBe("fk_live_abc");
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBeUndefined();
+  });
+
+  it("clears BOTH the API key and the token on 401", async () => {
+    setToken("tok" as AuthToken);
+    setApiKey("fk_live_abc", "key-id");
+    fetchMock.mockResolvedValueOnce(http(401));
+    const err = (await gqlRequest("q").catch((e) => e)) as FlashGraphQLError;
+    expect(err.code).toBe("UNAUTHENTICATED");
+    expect(getApiKey()).toBeNull();
+    expect(getToken()).toBeNull();
   });
 
   it("throws FlashGraphQLError (with code) on GraphQL errors", async () => {

@@ -91,3 +91,41 @@ describe("cashout (two-step)", () => {
     await expect(ops.initiateCashout("o1", W)).resolves.toBe("cash-1");
   });
 });
+
+describe("api keys", () => {
+  it("createApiKey sends the scoped, expiring input and returns the key", async () => {
+    mockGql.mockResolvedValueOnce({
+      apiKeyCreate: { errors: [], apiKey: { id: "k1", keyId: "fk_1", name: "Flash FediMod", apiKey: "raw", scopes: ["read_wallet"] } },
+    });
+    const key = await ops.createApiKey();
+    expect(key.apiKey).toBe("raw");
+    expect(key.id).toBe("k1");
+    // Least-privilege scopes, 30-day expiry in SECONDS (not days/ms), stable name.
+    expect(mockGql.mock.calls[0][1]).toEqual({
+      input: {
+        name: "Flash FediMod",
+        scopes: ["read_user", "read_wallet", "read_transactions", "write_wallet", "write_transactions"],
+        expiresIn: 2_592_000,
+      },
+    });
+  });
+
+  it("createApiKey throws when the raw key is missing from the payload", async () => {
+    mockGql.mockResolvedValueOnce({ apiKeyCreate: { errors: [], apiKey: { id: "k1", keyId: "fk_1", name: "n", apiKey: null, scopes: [] } } });
+    await expect(ops.createApiKey()).rejects.toThrow();
+  });
+
+  it("createApiKey surfaces payload errors", async () => {
+    mockGql.mockResolvedValueOnce({ apiKeyCreate: { errors: [{ message: "denied" }], apiKey: null } });
+    await expect(ops.createApiKey()).rejects.toBeInstanceOf(FlashGraphQLError);
+  });
+
+  it("revokeApiKey revokes by global id and never throws", async () => {
+    mockGql.mockResolvedValueOnce({ apiKeyRevoke: { errors: [], apiKey: { keyId: "fk_1", status: "REVOKED" } } });
+    await ops.revokeApiKey("k1");
+    expect(mockGql.mock.calls[0][1]).toEqual({ input: { id: "k1" } });
+
+    mockGql.mockRejectedValueOnce(new Error("boom"));
+    await expect(ops.revokeApiKey("k1")).resolves.toBeUndefined();
+  });
+});
