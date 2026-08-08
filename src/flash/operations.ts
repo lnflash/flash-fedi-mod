@@ -2,8 +2,12 @@
  * Typed Flash operations. Every query/mutation string below is written against the
  * real Flash schema (schema/flash-schema.graphql) verified in Phase 0.
  */
+import { config } from "../config";
 import { gqlRequest, FlashGraphQLError } from "./client";
 import type {
+  ApiKey,
+  ApiKeyCreatePayload,
+  ApiKeyRevokePayload,
   AuthTokenPayload,
   Bank,
   CaptchaChallenge,
@@ -128,6 +132,45 @@ export async function userLogin(phone: string, code: string): Promise<AuthTokenP
 export async function logout(): Promise<void> {
   await gqlRequest<{ userLogout: { success: boolean | null; errors: GqlError[] } }>(
     `mutation UserLogout { userLogout { success errors { message } } }`,
+  ).catch(() => undefined);
+}
+
+// ---------- API keys (FIP-07) ----------
+
+/**
+ * Mint a scoped API key for the mod. Must run while the OTP session token is still
+ * active (the client sends `Bearer` because no key exists yet). Returns the full
+ * key including the one-time raw secret in `apiKey`.
+ */
+export async function createApiKey(): Promise<ApiKey> {
+  const data = await gqlRequest<{ apiKeyCreate: ApiKeyCreatePayload }>(
+    `mutation ApiKeyCreate($input: ApiKeyCreateInput!) {
+      apiKeyCreate(input: $input) {
+        apiKey { id keyId name apiKey scopes }
+        errors { message code }
+      }
+    }`,
+    {
+      input: {
+        name: config.apiKeyName,
+        scopes: config.apiKeyScopes,
+        expiresIn: config.apiKeyExpiresInSeconds,
+      },
+    },
+  );
+  assertNoErrors(data.apiKeyCreate.errors);
+  const key = data.apiKeyCreate.apiKey;
+  if (!key?.apiKey) throw new Error("Flash did not return a new API key.");
+  return key;
+}
+
+/** Revoke a key by its global id. Best-effort — swallows errors (key may be gone). */
+export async function revokeApiKey(id: string): Promise<void> {
+  await gqlRequest<{ apiKeyRevoke: ApiKeyRevokePayload }>(
+    `mutation ApiKeyRevoke($input: ApiKeyRevokeInput!) {
+      apiKeyRevoke(input: $input) { apiKey { keyId status } errors { message code } }
+    }`,
+    { input: { id } },
   ).catch(() => undefined);
 }
 

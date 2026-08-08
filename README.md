@@ -18,9 +18,15 @@ this is built against, and [`REVIEW-AND-DESIGN.md`](REVIEW-AND-DESIGN.md) for wh
 
 ## Architecture (the short version)
 
-- **Pure client-side.** No backend, no app secrets. The only credential held is the
-  **user's own auth token**, obtained at runtime via Flash's OTP login (real geetest captcha).
-  Token lives in `sessionStorage` (tab-scoped), never `localStorage`, never the bundle.
+- **Pure client-side.** No backend, no app secrets. The only credentials held are the
+  **user's own**, obtained at runtime — never in the bundle:
+  - an **auth token** from Flash's OTP login (real geetest captcha), in `sessionStorage`
+    (tab-scoped). It bootstraps login and mints the API key below.
+  - a **scoped API key** (FIP-07) the mod mints right after login, in `localStorage` so the
+    connection survives the webview closing — **connect once**. It carries only the scopes the
+    mod needs (`read_user`/`read_wallet`/`read_transactions` + `write_wallet`/`write_transactions`),
+    expires after 30 days, and is **revoked on Logout**. Requests authenticate with `X-API-KEY`.
+    (The feature is live on Flash **TEST** first; see `.env.example`.)
 - **Talks directly to Flash's real GraphQL API** — every operation is verified against the
   live schema (`schema/flash-schema.graphql`). No invented REST endpoints.
 - **The Fedi host provides the Lightning rails** via its injected WebLN provider
