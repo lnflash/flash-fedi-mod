@@ -1,4 +1,4 @@
-# Flash · FediMod — Roadmap
+# Flash · FediMod: Roadmap
 
 Status of the four shipped features and what's planned next. The current build is
 documented in [`README.md`](README.md); the verified API contract behind it is in
@@ -30,8 +30,8 @@ the exact Fedi WebLN injection surface, and the TOTP (`userLoginUpgrade`) login 
 
 ### Bank / Credit-Card top-up (cash-in)
 
-**Why it isn't here yet.** Phase 0 introspection of the live Flash GraphQL API found
-**no** cash-in mutation — nothing for card, bank deposit, or Fygaro. `BankAccount*` and
+**Status.** Phase 0 introspection of the live Flash GraphQL API found
+**no** cash-in mutation: nothing for card, bank deposit, or Fygaro. `BankAccount*` and
 `requestCashout`/`initiateCashout` exist for cash-**out** only. The original FediMod
 called card/bank top-up endpoints that do not exist, so they could never work. Until
 Flash exposes a cash-in mutation, the **Fedi → Flash Lightning bridge is the top-up**
@@ -44,7 +44,7 @@ shippable and reversible behind a flag:
    card-payment-link create + a settlement webhook/status query, or a direct
    `deposit*`/`cashIn*`). Capture it in `PHASE0-FLASH-CONTRACT.md` and regenerate types
    (`schema/flash-schema.graphql` → `codegen.ts`). **Do not build against an assumed
-   shape** — that was the original repo's core mistake.
+   shape**: that was the original repo's core mistake.
 2. **New gated feature.** Add a `Top up` tab (or a card option inside Move) behind a new
    `VITE_FEATURE_CARD_TOPUP` flag, defaulting **off** until verified end-to-end on a
    device. Wire it into `src/flags.ts`, `App.tsx`, and `.env.example` exactly like the
@@ -63,13 +63,13 @@ shippable and reversible behind a flag:
    issue appears in the wild.
 
 **Blocked on:** Flash exposing a cash-in mutation. **Not blocked on:** anything in this
-repo — the flag scaffold and the gated-rollout pattern are already in place.
+repo: the flag scaffold and the gated-rollout pattern are already in place.
 
 ### Other candidates
 
-- **BTC-wallet bridge** — Move currently uses the USD wallet; add a BTC-wallet path
+- **BTC-wallet bridge**: Move currently uses the USD wallet; add a BTC-wallet path
   (`lnInvoiceCreate` is already wired in `operations.ts`) behind its own sub-flag.
-- **Add-bank-account from the mod** — registration is ERPNext-side today
+- **Add-bank-account from the mod**: registration is ERPNext-side today
   (`me.bankAccounts` is read-only via the API); revisit if Flash exposes a mutation.
-- **Locale-aware amounts** — `formatMinor` already falls back gracefully; extend to
+- **Locale-aware amounts**: `formatMinor` already falls back gracefully; extend to
   full `Intl` locale formatting (e.g. `en-JM`) when non-USD display lands.

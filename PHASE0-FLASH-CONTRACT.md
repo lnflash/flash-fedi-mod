@@ -1,16 +1,16 @@
-# Phase 0 — Flash API Contract (verified against the live schema)
+# Phase 0: Flash API Contract (verified against the live schema)
 
 Source: live GraphQL introspection of `https://api.flashapp.me/graphql` on 2026-06-28.
 Introspection is **enabled**. Full SDL saved at [`schema/flash-schema.graphql`](schema/flash-schema.graphql)
-(1867 lines). **No Galoy/Blink public schema was used — only Flash's own schema.**
+(1867 lines). **No Galoy/Blink public schema was used, only Flash's own schema.**
 
-## Confirmed: this is Flash's schema, not vanilla Galoy
+## Confirmed: this is Flash's schema (a Galoy fork)
 
 Flash-specific types/operations that do not exist in upstream Galoy confirm we are on the
 real Flash API: `Bank`, `BankAccount`, `BankAccountInput`, `supportedBanks`,
 `requestCashout`, `initiateCashout`, `CashoutOffer` (with `receiveJmd` / JMD exchange rate).
 
-## Auth (real captcha — geetest)
+## Auth (real captcha: geetest)
 
 1. `captchaCreateChallenge: CaptchaCreateChallengePayload!`
    → `result { id, challengeCode, newCaptcha, failbackMode }`
@@ -28,7 +28,7 @@ holds. There is no shared service key anywhere in the design.
 - `me: User { id, username, phone, totpEnabled, defaultAccount { ... }, bankAccounts { ... } }`
 - `defaultAccount` → `ConsumerAccount { defaultWalletId, wallets { id walletCurrency balance }, realtimePrice }`
 - Wallets: **BTC wallet balance is in satoshis**, **USD wallet balance is in USD cents**
-  (note: the schema types BTC `balance` as `FractionalCentAmount`, a known Galoy quirk —
+  (note: the schema types BTC `balance` as `FractionalCentAmount`, a known Galoy quirk,
   it is still sats; we model units explicitly so this never bites us).
 - `realtimePrice(currency): RealtimePrice { btcSatPrice { base, offset }, usdCentPrice }`
   → use for all conversions. **No hardcoded BTC price.**
@@ -56,8 +56,8 @@ holds. There is no shared service key anywhere in the design.
 
 ## Cash out to bank (settle)
 
-- `me.bankAccounts: [BankAccount!]!` — registered accounts, each with an ERPNext `id`.
-- `supportedBanks: [Bank!]!` — list of banks (name only).
+- `me.bankAccounts: [BankAccount!]!`: registered accounts, each with an ERPNext `id`.
+- `supportedBanks: [Bank!]!`: list of banks (name only).
 - `requestCashout(input: { walletId /*USD*/, bankAccountId, amount /*cents*/ }): RequestCashoutResponse { offer }`
   → `CashoutOffer { offerId, send, receiveUsd, receiveJmd, flashFee, exchangeRate, expiresAt }`
 - `initiateCashout(input: { offerId, walletId }): InitiatedCashoutResponse { id }`
@@ -65,7 +65,7 @@ holds. There is no shared service key anywhere in the design.
 
 ## ⛔ Not in the Flash API: fiat top-up (card / bank-in / Fygaro)
 
-Searched the entire schema — there is **no** `fygaro*`, `topup*`, `cashIn*`, `deposit*`,
+Searched the entire schema: there is **no** `fygaro*`, `topup*`, `cashIn*`, `deposit*`,
 or card-payment-link mutation. `BankAccount*` exists only for **cash-OUT**.
 
 **Consequence:** the original repo's "Top Up via bank / Fygaro card" flows call endpoints
@@ -74,13 +74,13 @@ that do not exist. They cannot be built against the current Flash API.
 **Resolution (the bridge-first decision pays off):** the **Fedi → Flash Lightning bridge IS
 the top-up.** Phase 3 ("fiat top-up") is therefore *Not Applicable* until Flash exposes a
 cash-in mutation. We document it and ship the Lightning top-up instead. (Adding a new bank
-account for cash-out also appears to be ERPNext-side — `me.bankAccounts` is read-only here —
+account for cash-out also appears to be ERPNext-side (`me.bankAccounts` is read-only here)
 so we surface existing accounts and flag registration as a Flash-side dependency.)
 
 ## Backend?
 
 Not needed. All flows above are user-token + GraphQL + injected WebLN, 100% client-side.
-A thin stateless service would only be required for a future Fygaro/webhook cash-in flow —
+A thin stateless service would only be required for a future Fygaro/webhook cash-in flow,
 which the API does not currently support anyway. So: **pure client for now.**
 
 ## Host (Fedi) dependency
