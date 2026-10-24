@@ -21,12 +21,12 @@ this is built against, and [`REVIEW-AND-DESIGN.md`](REVIEW-AND-DESIGN.md) for wh
 - **Pure client-side.** No backend, no app secrets. The only credential held is the
   **user's own auth token**, obtained at runtime via Flash's OTP login (real geetest captcha).
   Token lives in `sessionStorage` (tab-scoped), never `localStorage`, never the bundle.
-- **Talks directly to Flash's real GraphQL API** — every operation is verified against the
+- **Talks directly to Flash's real GraphQL API**: every operation is verified against the
   live schema (`schema/flash-schema.graphql`). No invented REST endpoints.
 - **The Fedi host provides the Lightning rails** via its injected WebLN provider
-  (`src/host/webln.ts`). If there's no provider, the app says so — it never fakes a balance.
+  (`src/host/webln.ts`). If there's no provider, the app says so: it never fakes a balance.
 - **Units are explicit** (sats vs USD cents) and fiat conversion uses Flash's
-  `realtimePrice` — no hardcoded BTC price.
+  `realtimePrice`: no hardcoded BTC price.
 
 ```
 src/
@@ -48,7 +48,7 @@ Bank/Credit-Card top-up rollout once Flash exposes a cash-in mutation.
 ## Feature flags
 
 Every major feature is gated by a flag (all default **on**) so a deploy can ship with any
-flow disabled without code changes. Set them in `.env` (see `.env.example`) — values accept
+flow disabled without code changes. Set them in `.env` (see `.env.example`): values accept
 `true/false`, `on/off`, `1/0`, `yes/no`:
 
 | Flag | Gates |
